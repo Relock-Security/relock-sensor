@@ -1,0 +1,208 @@
+#!/bin/sh
+
+set -e
+
+# --- Kernel / TCP tuning (best-effort; ignore failures if not permitted) ---
+set_sysctl() {
+    # $1 = /proc/sys/... path, $2 = value
+    if [ -w "$1" ]; then
+        echo "$2" > "$1" 2>/dev/null || true
+    fi
+}
+
+set_sysctl /proc/sys/net/ipv4/tcp_mtu_probing 1
+set_sysctl /proc/sys/net/ipv4/tcp_fastopen 3
+set_sysctl /proc/sys/net/core/somaxconn 4096
+set_sysctl /proc/sys/net/ipv4/tcp_max_syn_backlog 8192
+set_sysctl /proc/sys/net/ipv4/ip_local_port_range "10240 65535"
+set_sysctl /proc/sys/net/ipv4/tcp_tw_reuse 1
+# set_sysctl /proc/sys/net/core/netdev_max_backlog 16384
+
+ROOT="/demo"
+
+# --- Parse subcommand: demo | run ---
+SUBCMD="${1:-run}"
+case "$SUBCMD" in
+    demo|cloud|run)
+        shift
+        ;;
+    *)
+        # Default to "run" if user didn't specify a subcommand
+        SUBCMD="run"
+        ;;
+esac
+
+# Preserve original args for the final exec (we will rebuild it safely below)
+ORIG_ARGS="$@"
+
+# --- Defaults ---
+HOST=""
+UPSTREAM=""
+KEY=""
+CRT=""
+ENABLE_NGINX=0
+
+# --- Parse flags from "$@" ---
+# Supports:
+#   --host VALUE
+#   --relock_host VALUE
+#   --nginx
+# Also supports GNU style:
+#   --host=VALUE
+#   --relock_host=VALUE
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -h|--host)
+            [ -n "${2:-}" ] || { echo "Missing value for $1" >&2; exit 2; }
+            HOST="$2"
+            shift 2
+            ;;
+        --host=*)
+            HOST="${1#*=}"
+            shift
+            ;;
+        --key)
+            [ -n "${2:-}" ] || { echo "Missing value for $1" >&2; exit 2; }
+            KEY="$2"
+            shift 2
+            ;;
+        --key=*)
+            KEY="${1#*=}"
+            shift
+            ;;
+        --crt)
+            [ -n "${2:-}" ] || { echo "Missing value for $1" >&2; exit 2; }
+            CRT="$2"
+            shift 2
+            ;;
+        --crt=*)
+            CRT="${1#*=}"
+            shift
+            ;;
+        -r|--relock_host)
+            [ -n "${2:-}" ] || { echo "Missing value for $1" >&2; exit 2; }
+            UPSTREAM="$2"
+            shift 2
+            ;;
+        --relock_host=*)
+            UPSTREAM="${1#*=}"
+            shift
+            ;;
+        --nginx)
+            ENABLE_NGINX=1
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+# --- If HOST is provided, render nginx config and ensure cert exists ---
+if [ -n "$HOST" ]; then
+    # Basic safety: allow only hostname-ish chars
+    case "$HOST" in
+        *[!A-Za-z0-9.-]*|'')
+            echo "Invalid HOST: $HOST" >&2
+            exit 1
+            ;;
+    esac
+
+    export HOST
+    export ROOT
+
+    echo $HOST
+
+    # UPSTREAM is optional; template may or may not use it
+    if [ -n "$UPSTREAM" ]; then
+        case "$UPSTREAM" in
+            *[!A-Za-z0-9.-]*)
+                echo "Invalid UPSTREAM: $UPSTREAM" >&2
+                exit 1
+                ;;
+        esac
+        export UPSTREAM
+    fi
+
+    mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled "$ROOT"
+
+    # Avoid any other enabled site configs
+    rm -f /etc/nginx/sites-enabled/* 2>/dev/null || true
+
+    NGINX_TMPL="/etc/nginx/sites-available/template.conf"
+    NGINX_CONF="/etc/nginx/sites-enabled/${HOST}"
+
+    export CRT
+    export KEY
+
+    FCRT="${ROOT}/${CRT}"
+    FKEY="${ROOT}/${KEY}"
+
+    echo "$NGINX_CONF"
+
+    # Generate cert ONLY if not provided from outside
+    if [ ! -f "$FCRT" ] || [ ! -f "$FKEY" ]; then
+        openssl req -x509 -newkey rsa:4096 \
+            -keyout "$KEY" \
+            -out "$CRT" \
+            -sha256 \
+            -days 3650 \
+            -nodes \
+            -subj "/CN=$HOST" \
+            -addext "subjectAltName=DNS:$HOST,DNS:*.$HOST,IP:127.0.0.1"
+    fi
+
+    # Discover resolver IPs from container DNS config
+    RESOLVER_IPS="$(
+        awk '/^nameserver[[:space:]]+/ { print $2 }' /etc/resolv.conf \
+            | grep -vE '^(127\.0\.0\.1|127\.0\.0\.53)$' \
+            | paste -sd' ' -
+    )"
+
+    echo "DNS Resolver: $RESOLVER_IPS"
+
+    # Reasonable Docker fallback
+    if [ -z "$RESOLVER_IPS" ]; then
+        RESOLVER_IPS="127.0.0.11"
+    fi
+
+    export RESOLVER_IPS
+
+    # Render nginx config
+    if command -v envsubst >/dev/null 2>&1; then
+        envsubst '${HOST} ${RESOLVER_IPS} ${UPSTREAM} ${CRT} ${KEY}' < "$NGINX_TMPL" > "$NGINX_CONF"
+    else
+        esc_host=$(printf '%s' "$HOST" | sed 's/[\/&]/\\&/g')
+        esc_resolvers=$(printf '%s' "$RESOLVER_IPS" | sed 's/[\/&]/\\&/g')
+        esc_upstream=$(printf '%s' "$UPSTREAM" | sed 's/[\/&]/\\&/g')
+        esc_crt=$(printf '%s' "$CRT" | sed 's/[\/&]/\\&/g')
+        esc_key=$(printf '%s' "$KEY" | sed 's/[\/&]/\\&/g')
+        sed -e "s/\${HOST}/$esc_host/g" \
+            -e "s/\${RESOLVER_IPS}/$esc_resolvers/g" \
+            -e "s/\${UPSTREAM}/$esc_upstream/g" \
+            -e "s/\${CRT}/$esc_crt/g" \
+            -e "s/\${KEY}/$esc_key/g" \
+            "$NGINX_TMPL" > "$NGINX_CONF"
+    fi
+
+    nginx -t
+
+    # Reload only if already running
+    nginx -s reload 2>/dev/null || true
+fi
+
+# --- Start nginx if requested ---
+if [ "$ENABLE_NGINX" -eq 1 ]; then
+    if ! service nginx status >/dev/null 2>&1; then
+        service nginx start
+    fi
+fi
+
+# --- Run the app ---
+# Execute your python entrypoint with the chosen subcommand ("demo" or "run")
+# and pass through original args verbatim (not as a single string).
+case "$SUBCMD" in
+    run)
+        exec python3 $ROOT/main.py run $ORIG_ARGS
+        ;;
+esac

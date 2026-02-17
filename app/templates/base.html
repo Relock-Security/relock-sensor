@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% if title %}{{ title }}{% else %}re:lock authentication gateway{% endif %}</title>
+    <meta name="description" content="">
+
+    {% block meta %}{% endblock %}
+    {% block head %}
+
+    {% include 'scripts.html' %}
+
+    {% block scripts %}
+        {{ bootstrap.load_js(nonce=request_nonce()) }}
+    {% endblock %}
+    {% block css %}{% endblock %}
+    {% block styles %}
+    {{ bootstrap.load_css() }}
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" nonce="{{ request_nonce() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css')}}" nonce="{{ request_nonce() }}" />
+
+    <meta name="apple-mobile-web-app-title" content="relock" />
+
+    {% if not no_links is defined %}
+        <script type="text/javascript" nonce="{{ request_nonce() }}">
+            (function () {
+                'use strict'
+                window.addEventListener('X-Key-Signout', function(event) {
+                    
+                });
+            })()
+        </script>
+    {% endif %}
+
+    {% endblock %}
+    {% endblock %}
+</head>
+    <body>
+
+        {% block modal %}{% endblock %}
+
+        <main class="box">
+            {% block content %}{% endblock %}            
+        </main>
+
+    </body>
+</html>

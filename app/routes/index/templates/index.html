@@ -1,0 +1,64 @@
+{% set block_footer = True %}
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="text-center align-middle mt-5">
+
+	    I am groot
+	    <h2>{{ session.sid }}</h2>
+
+<script type="text/javascript" nonce="{{ request_nonce() }}">
+	
+	(function () {
+		'use strict'
+
+		async function request(url, request) {
+			let token = await window.relock.token()
+			let signature = await window.relock.sign(token)
+
+			return fetch(url, {
+					method: "POST",
+					credentials: 'include',
+					withCredentials: true,
+					headers: {"Content-Type": "application/json",
+					  		  "Accept": "application/json",
+					  		  "X-Key-Token": token.hexlify(),
+				  			  "X-Key-Signature": signature.hexlify()},
+					body: JSON.stringify(request)
+				})
+				.then((response) => {
+					return response.json()
+				})
+				.then((json) => {
+					return json
+				})
+				.catch((error) => {
+					console.error(String(error))
+				})
+		}
+
+		window.addEventListener('X-Key-Signout', function(event) {
+			if(event.detail.terminate)
+        		request('/terminate', event).then(() => {
+        			setTimeout(() => {
+        				window.location = '/relock/clean'
+        			}, 200)
+        		})
+        });
+
+		window.addEventListener('X-Key-Established', function(event) {
+			
+		}, { once: true });
+
+		window.addEventListener('X-Key-Rekeying-Done', function(event) {
+
+		}, { once: true });
+
+	})()
+
+</script>
+
+</section>
+
+{% endblock %}
