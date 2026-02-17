@@ -28,3 +28,9 @@ run:
 					--crt cert.pem \
 					--nginx \
 					--debug 
+
+ip:
+	@docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(CONTAINER)
+
+stop:
+	@sudo docker stop $(CONTAINER) >/dev/null 2>&1 || true
