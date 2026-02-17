@@ -29,7 +29,7 @@ def init_app(*args, **kwargs):
 
 	""" Relock_Host configuration """
 	app.config.update(
-		RELOCK_HOST = os.environ.get('RELOCK_HOST'),
+		RELOCK_HOST = os.environ.get('RELOCK_HOST')
 	)
 
 	""" Flask_Session configuration """
