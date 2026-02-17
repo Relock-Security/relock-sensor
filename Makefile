@@ -27,7 +27,7 @@ run:
 					--key key.pem \
 					--crt cert.pem \
 					--nginx \
-					--debug 
+					--debug
 
 ip:
 	@docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(CONTAINER)

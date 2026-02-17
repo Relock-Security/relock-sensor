@@ -1,4 +1,4 @@
-# Relock Sensor -- Session Protection Demo
+# Relock - Session Protection Demo
 
 Relock Sensor is a lightweight demo application that demonstrates
 **infrastructure-level session protection** using Relock Security.
@@ -274,13 +274,36 @@ under the correct origin - Configuration changes are saved
 
 # Summary
 
-Relock Sensor demonstrates how modern session protection can be:
+Relock Sensor demonstrates an infrastructure-enforced approach to 
+session protection aligned with modern Zero Trust architecture and 
+enterprise compliance frameworks such as SOC 2 and ISO 27001.
 
--   Infrastructure-enforced
--   Application-agnostic
--   Zero-trust aligned
--   Asynchronous
--   Cryptographically verified
+Security & Compliance Alignment
 
-It is a reference implementation of session protection without backend
-integration.
+Zero Trust Enforcement
+Every request is explicitly validated before reaching the application. 
+Trust is continuously evaluated — not assumed after authentication.
+
+Independent Security Control Layer
+Session verification is enforced at the proxy layer using NGINX 
+(auth_request), establishing a clear separation between business logic 
+and security controls. This supports defense-in-depth and strong 
+control boundaries.
+
+Reduced Application Risk Surface
+The backend does not parse or validate tokens, minimizing exposure to 
+JWT parsing errors, signature misconfigurations, and inconsistent 
+enforcement across services.
+
+Centralized Policy Enforcement
+Authentication and session validation policies are applied 
+consistently at the infrastructure layer, supporting uniform access 
+control and improved auditability.
+
+Secure Cryptographic Context
+Browser-based cryptographic operations require HTTPS, reinforcing 
+secure session handling in accordance with modern security standards.
+
+Relock shifts session protection from an application responsibility 
+to a verifiable infrastructure control aligned with Zero Trust 
+architecture principles.
