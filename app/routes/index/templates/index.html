@@ -39,11 +39,11 @@
 		}
 
 		window.addEventListener('X-Key-Signout', function(event) {
+			console.warn(event.detail.terminate)
 			if(event.detail.terminate) {
-				console.warn(event.detail)
         		request('/terminate', event).then(() => {
         			setTimeout(() => {
-        				window.location = '/relock/clean'
+        				window.location = '/'
         			}, 500)
         		})
         	}
