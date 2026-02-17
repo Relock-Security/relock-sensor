@@ -10,7 +10,6 @@ image:
 	docker build --no-cache -t relockid/sensor:latest -f docker/Dockerfile .
 
 run:
-	@echo $(RELOCK_HOST)
 	sudo docker run --name sensor \
 					--user root \
 					--privileged \
@@ -22,7 +21,6 @@ run:
 					 -v ./nginx/template.conf:/etc/nginx/sites-available/template.conf \
 					-it relockid/sensor run \
 					--relock_host $(RELOCK_HOST) \
-					--redis_host $(REDIS_HOST) \
 					--host $(HOST) \
 					--port 8080 \
 					--ip 0.0.0.0 \

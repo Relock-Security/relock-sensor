@@ -21,7 +21,7 @@ RUN set -eux; \
 	apt-get update; \
 	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 		debconf ca-certificates gettext-base \
-		nginx \
+		nginx redis \
 		python3 python3-pip python3-requests nano pkg-config \
 		python3-dev default-libmysqlclient-dev build-essential \
 		python3-async-timeout \

@@ -198,6 +198,10 @@ if [ "$ENABLE_NGINX" -eq 1 ]; then
     fi
 fi
 
+if ! service redis-server status >/dev/null 2>&1; then
+    service redis-server start
+fi
+echo $ORIG_ARGS
 # --- Run the app ---
 # Execute your python entrypoint with the chosen subcommand ("demo" or "run")
 # and pass through original args verbatim (not as a single string).

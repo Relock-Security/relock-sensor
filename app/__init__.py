@@ -27,13 +27,6 @@ def init_app(*args, **kwargs):
 		APP_DEBUG   = bool(kwargs.get('debug', False))
 	)
 
-	""" Flask_Session configuration """
-	app.config.update(
-		REDIS_HOST = os.environ.get('REDIS_HOST', '172.17.0.2'),
-		REDIS_PORT = os.environ.get('REDIS_PORT', 6379),
-		REDIS_DB   = os.environ.get('REDIS_DB', 0)
-	)
-
 	""" Relock_Host configuration """
 	app.config.update(
 		RELOCK_HOST = os.environ.get('RELOCK_HOST'),
@@ -59,9 +52,9 @@ def init_app(*args, **kwargs):
 
 	app.config.update(
 		SESSION_TYPE  = 'redis',
-		SESSION_REDIS = redis.Redis(host=app.config.get('REDIS_HOST'), 
-								    port=app.config.get('REDIS_PORT'), 
-								    db=app.config.get('REDIS_DB'), )
+		SESSION_REDIS = redis.Redis(host='127.0.0.1', 
+								    port=6379, 
+								    db=0)
 	)
 	
 	app.config.update(
