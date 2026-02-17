@@ -1,2 +1,2 @@
 
-    <script src="https://test.relock.cloud/relock/relock.js" nonce="{{ request_nonce() }}" async fetchpriority="high"></script>
+    <script src="https://{{ config.get('RELOCK_HOST') }}/relock/relock.js" nonce="{{ request_nonce() }}" async fetchpriority="high"></script>
