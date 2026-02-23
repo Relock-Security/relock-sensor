@@ -18,7 +18,7 @@ from flask import (current_app as app,
 				   abort)
 
 @bp.route("/", methods=['GET', 'POST'])
-def index():
+def index(token=None):
 	logging.info(session.sid)
 	if not session.sid in session:
 		session['sid'] = session.sid
