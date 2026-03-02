@@ -38,16 +38,21 @@
 				})
 		}
 
-		window.addEventListener('X-Key-Signout', function(event) {
-			console.warn(event.detail.terminate)
-			if(event.detail.terminate) {
-        		request('/terminate', event).then(() => {
-        			setTimeout(() => {
-        				window.location = '/'
-        			}, 500)
-        		})
-        	}
+		window.addEventListener('X-Key-Flush', function(event) {
+    		request('/terminate', event).then(() => {
+    			setTimeout(() => {
+    				window.location = '/'
+    			}, 500)
+    		})
         });
+
+	    window.addEventListener('X-Key-Signout', function(event) {
+    		request('/terminate', event).then(() => {
+    			setTimeout(() => {
+    				window.location = '/'
+    			}, 500)
+    		})
+	    });
 
 		window.addEventListener('X-Key-Established', function(event) {
 			

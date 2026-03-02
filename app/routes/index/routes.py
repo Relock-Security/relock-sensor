@@ -22,6 +22,7 @@ def index(token=None):
 	logging.info(session.sid)
 	if not session.sid in session:
 		session['sid'] = session.sid
+	# session['absorbed'] = True
 	return render_template('index.html')
 
 @bp.route("/terminate", methods=['GET', 'POST'])

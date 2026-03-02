@@ -46,7 +46,7 @@ RUN set -eux; \
 		python3-bleach \
 		python3-redis ; \
 	python3 -m pip install --upgrade --break-system-packages \
-		Bootstrap-Flask Flask-Session; \
+		Bootstrap-Flask Flask-Session Blake3; \
 	apt-get remove -y python3-pip build-essential && apt-get clean; \
 	rm -rf /var/lib/apt/lists/*;
 
