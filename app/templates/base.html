@@ -22,21 +22,10 @@
 
     <meta name="apple-mobile-web-app-title" content="relock" />
 
-    {% if not no_links is defined %}
-        <script type="text/javascript" nonce="{{ request_nonce() }}">
-            (function () {
-                'use strict'
-                window.addEventListener('X-Key-Signout', function(event) {
-                    
-                });
-            })()
-        </script>
-    {% endif %}
-
     {% endblock %}
     {% endblock %}
 </head>
-    <body>
+    <body nonce="{{ request_nonce() }}">
 
         {% block modal %}{% endblock %}
 

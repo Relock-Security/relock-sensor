@@ -6,6 +6,7 @@ FROM ubuntu:latest
 
 COPY docker/docker-entrypoint /usr/local/bin/
 COPY nginx/template.conf /etc/nginx/sites-available/template.conf
+COPY nginx/relock.lua /etc/nginx/lua/relock.lua
 COPY main.py /demo/main.py
 COPY .env /demo/.env
 
@@ -21,7 +22,7 @@ RUN set -eux; \
 	apt-get update; \
 	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 		debconf ca-certificates gettext-base \
-		nginx redis \
+		nginx libnginx-mod-http-lua redis \
 		python3 python3-pip python3-requests nano pkg-config \
 		python3-dev default-libmysqlclient-dev build-essential \
 		python3-async-timeout \

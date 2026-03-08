@@ -1,2 +1,11 @@
 
-    <script src="/relock/relock.js" nonce="{{ request_nonce() }}" async fetchpriority="high"></script>
+    {% if not no_links is defined %}
+        <script type="text/javascript" nonce="{{ request_nonce() }}">
+            (function () {
+                'use strict'
+                window.addEventListener('X-Key-Signout', function(event) {
+                    
+                });
+            })()
+        </script>
+    {% endif %}
