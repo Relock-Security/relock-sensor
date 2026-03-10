@@ -1,3 +1,10 @@
+local uri = ngx.var.uri or ""
+
+-- Do not inject on Relock-owned routes
+if uri == "/relock" or uri:match("^/relock/") then
+    return
+end
+
 local ct = ngx.header["Content-Type"]
 if not ct or not ct:find("text/html", 1, true) then
     return
@@ -17,6 +24,7 @@ end
 
 if eof then
     local whole = table.concat(ngx.ctx.relock_buffer)
+    ngx.ctx.relock_buffer = nil
 
     -- Avoid double injection
     if whole:find('/relock/relock%.js', 1, false) then
@@ -33,12 +41,11 @@ if eof then
         inject = '\t<script src="/relock/relock.js" async fetchpriority="high"></script>'
     end
 
-    -- Prefer injecting before </head>, fallback to before </body>, fallback to append
-    local replaced = false
+    local replaced = 0
 
-    whole, replaced = whole:gsub("</head>", inject .. "</head>", 1)
+    whole, replaced = whole:gsub("</[Hh][Ee][Aa][Dd]>", inject .. "</head>", 1)
     if replaced == 0 then
-        whole, replaced = whole:gsub("</body>", inject .. "</body>", 1)
+        whole, replaced = whole:gsub("</[Bb][Oo][Dd][Yy]>", inject .. "</body>", 1)
     end
     if replaced == 0 then
         whole = whole .. inject
