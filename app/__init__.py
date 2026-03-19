@@ -36,7 +36,7 @@ def init_app(*args, **kwargs):
 	app.config.update(
 		SESSION_COOKIE_DOMAIN = None,
 		SESSION_COOKIE_PATH = '/',
-		SESSION_COOKIE_NAME = 'session',
+		SESSION_COOKIE_NAME = 'AWSELBAuthSessionCookie-0',
 		SESSION_COOKIE_HTTPONLY = True,
 		SESSION_COOKIE_SECURE = True,
 		SESSION_COOKIE_SAMESITE = 'lax',
