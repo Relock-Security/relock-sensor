@@ -26,6 +26,7 @@ logging.getLogger('cli.client')
 @click.option('--relock_host', is_flag=False, default=str(), help=('Relock service host'))
 @click.option('--nginx', is_flag=True, default=False, help=('NGINX mode. Default: False'))
 @click.option('--nginx_auth', is_flag=True, default=False, help=('NGINX request_auth. Default: False'))
+@click.option('--elasticache', is_flag=True, default=False, help=('Elasticache mode. Default: False'))
 @cli.command()
 def run(host, 
 		port,
@@ -37,7 +38,8 @@ def run(host,
 		redis_host,
 		redis_port,
 		nginx,
-		nginx_auth):
+		nginx_auth,
+		elasticache):
 	dotenv.load_dotenv()
 
 	if redis_host:
@@ -52,7 +54,8 @@ def run(host,
 		os.environ['NGINX'] = 'True'
 
 	os.environ['GEVENT_RESOLVER'] = 'ares'
-	os.environ['HOST'] = host
+	os.environ['HOST'] = str(host)
+	os.environ['ELASTICACHE'] = str(elasticache)
 
 	from .. import init_app
 	
