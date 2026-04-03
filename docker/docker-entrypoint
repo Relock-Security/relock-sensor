@@ -18,12 +18,12 @@ set_sysctl /proc/sys/net/ipv4/ip_local_port_range "10240 65535"
 set_sysctl /proc/sys/net/ipv4/tcp_tw_reuse 1
 # set_sysctl /proc/sys/net/core/netdev_max_backlog 16384
 
-ROOT="/demo"
+ROOT="/relock"
 
 # --- Parse subcommand: demo | run ---
 SUBCMD="${1:-run}"
 case "$SUBCMD" in
-    demo|cloud|run)
+    sensor|run)
         shift
         ;;
     *)
@@ -168,18 +168,22 @@ if [ -n "$HOST" ]; then
 
     export RESOLVER_IPS
 
+    echo "RESOLVER_IPS"
+
     # Render nginx config
     if command -v envsubst >/dev/null 2>&1; then
-        envsubst '${HOST} ${RESOLVER_IPS} ${UPSTREAM} ${CRT} ${KEY}' < "$NGINX_TMPL" > "$NGINX_CONF"
+        envsubst '${HOST} ${RESOLVER_IPS} ${UPSTREAM} ${ROOT} ${CRT} ${KEY}' < "$NGINX_TMPL" > "$NGINX_CONF"
     else
         esc_host=$(printf '%s' "$HOST" | sed 's/[\/&]/\\&/g')
         esc_resolvers=$(printf '%s' "$RESOLVER_IPS" | sed 's/[\/&]/\\&/g')
         esc_upstream=$(printf '%s' "$UPSTREAM" | sed 's/[\/&]/\\&/g')
+        esc_root=$(printf '%s' "$ROOT" | sed 's/[\/&]/\\&/g')
         esc_crt=$(printf '%s' "$CRT" | sed 's/[\/&]/\\&/g')
         esc_key=$(printf '%s' "$KEY" | sed 's/[\/&]/\\&/g')
         sed -e "s/\${HOST}/$esc_host/g" \
             -e "s/\${RESOLVER_IPS}/$esc_resolvers/g" \
             -e "s/\${UPSTREAM}/$esc_upstream/g" \
+            -e "s/\${ROOT}/$esc_root/g" \
             -e "s/\${CRT}/$esc_crt/g" \
             -e "s/\${KEY}/$esc_key/g" \
             "$NGINX_TMPL" > "$NGINX_CONF"
@@ -198,14 +202,13 @@ if [ "$ENABLE_NGINX" -eq 1 ]; then
     fi
 fi
 
-if ! service redis-server status >/dev/null 2>&1; then
-    service redis-server start
-fi
-echo $ORIG_ARGS
 # --- Run the app ---
 # Execute your python entrypoint with the chosen subcommand ("demo" or "run")
 # and pass through original args verbatim (not as a single string).
 case "$SUBCMD" in
+    sensor)
+        exec python3 $ROOT/main.py run $ORIG_ARGS
+        ;;
     run)
         exec python3 $ROOT/main.py run $ORIG_ARGS
         ;;
