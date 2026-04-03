@@ -51,7 +51,6 @@ def run(host,
 	if nginx:
 		os.environ['NGINX'] = 'True'
 
-	os.environ['GEVENT_RESOLVER'] = 'ares'
 	os.environ['HOST'] = str(host)
 
 	from .. import init_app
